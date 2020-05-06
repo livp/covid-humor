@@ -1,0 +1,22 @@
+sampling:
+  size: 100
+  keywords: [covidhumor,
+             coronahumor,
+             coronavirushumor,
+             coronamemes,
+             covidmemes,
+             quarantinememes,
+             quarantinefunny,
+             coronavirusfunny,
+             coronavirusparody,
+             quarantinehumor,
+             quarantinejokes,
+             covidjokes]
+
+base-url: https://raw.githubusercontent.com/echen102/COVID-19-TweetIDs/master
+
+twitter:
+  consumer_key: <API Key>
+  consumer_secret: <API Secret Key>
+  access_token: <Access Token>
+  access_token_secret: <Access Token Secret>
