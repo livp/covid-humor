@@ -5,6 +5,7 @@ Research on Covid19 humor on Twitter
 - Install Python 3.x (tested with 3.8)
 - Install virtualenv
 
+- Clone this repo
 ```shell script
 git clone https://github.com/livp/covid-humor.git
 cd covid-humor
