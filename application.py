@@ -12,6 +12,9 @@ from configuration import Configuration
 from tweet_id_reader import TweetIdReader
 
 
+CHARACTERS_TO_REMOVE = ['\n', '"']
+
+
 class Application:
     """Main entry point.
 
@@ -47,7 +50,8 @@ class Application:
         t = Twarc(self.configuration["twitter"]["consumer_key"],
                   self.configuration["twitter"]["consumer_secret"],
                   self.configuration["twitter"]["access_token"],
-                  self.configuration["twitter"]["access_token_secret"])
+                  self.configuration["twitter"]["access_token_secret"],
+                  tweet_mode="extended")
         tweets = []
         print("Reading tweets from Twitter")
         with tqdm(total=self.configuration["sampling"]["size"], unit="tweet") as written_progress_bar:
@@ -63,10 +67,28 @@ class Application:
 
     def export_to_csv(self, tweets):
         with open(self.output_filename, "w", encoding='utf-8') as f:
+            f.write("day,user,likes,retweets,text\n")
             for tweet in tweets:
-                full_text: str = tweet["full_text"]
-                full_text = full_text.replace('\n', '')
-                f.write("{}\n".format(full_text))
+                if "retweeted_status" in tweet.keys() and "full_text" in tweet["retweeted_status"].keys():
+                    full_text = self.remove_characters(tweet["retweeted_status"]["full_text"])
+                else:
+                    full_text: str = self.remove_characters(tweet["full_text"])
+
+                user_name: str = self.remove_characters(tweet["user"]["screen_name"])
+                likes: int = tweet["favorite_count"]
+                retweets: int = tweet["retweet_count"]
+                f.write('{}/{}/{},{},{},{},"{}"\n'.format(
+                    self.date.year, str(self.date.month).zfill(2), str(self.date.day).zfill(2),
+                    user_name,
+                    likes,
+                    retweets,
+                    full_text))
+
+    @staticmethod
+    def remove_characters(string: str) -> str:
+        for character in CHARACTERS_TO_REMOVE:
+            string = string.replace(character, '')
+        return string
 
     def setup_command_line_arguments(self):
         # Options
