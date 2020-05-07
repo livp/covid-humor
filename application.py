@@ -50,19 +50,23 @@ class Application:
                   self.configuration["twitter"]["access_token_secret"])
         tweets = []
         print("Reading tweets from Twitter")
-        with tqdm(total=len(tweet_ids), unit="tweet") as progress_bar:
-            for tweet in t.hydrate(tweet_ids):
-                progress_bar.update(1)
-                if any(keyword in tweet["full_text"].lower() for keyword in self.configuration["sampling"]["keywords"]):
-                    tweets.append(tweet)
-                    if len(tweets) == self.configuration["sampling"]["size"]:
-                        break
+        with tqdm(total=self.configuration["sampling"]["size"], unit="tweet") as written_progress_bar:
+            with tqdm(total=len(tweet_ids), unit="tweet") as hydrate_progress_bar:
+                for tweet in t.hydrate(tweet_ids):
+                    hydrate_progress_bar.update(1)
+                    if any(keyword in tweet["full_text"].lower() for keyword in self.configuration["sampling"]["keywords"]):
+                        tweets.append(tweet)
+                        written_progress_bar.update(1)
+                        if len(tweets) == self.configuration["sampling"]["size"]:
+                            break
         return tweets
 
     def export_to_csv(self, tweets):
-        with open(self.output_filename, "w") as f:
+        with open(self.output_filename, "w", encoding='utf-8') as f:
             for tweet in tweets:
-                f.write("{}\n".format(tweet["full_text"].replace('\n', '')))
+                full_text: str = tweet["full_text"]
+                full_text = full_text.replace('\n', '')
+                f.write("{}\n".format(full_text))
 
     def setup_command_line_arguments(self):
         # Options
@@ -80,5 +84,7 @@ class Application:
 
 
 if __name__ == "__main__":
+    import sys
+    print(sys.path)
     application = Application(ArgumentParser())
     application.run()
