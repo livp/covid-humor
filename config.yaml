@@ -1,24 +1,13 @@
 sampling:
-  size: 100
+  size: 10
   languages: [en]
-  keywords: [covidhumor,
-             coronahumor,
-             coronavirushumor,
-             coronamemes,
-             covidmemes,
-             quarantinememes,
-             quarantinefunny,
-             coronavirusfunny,
-             coronavirusparody,
-             quarantinehumor,
-             quarantinejokes,
-             covidjokes,
-             covid, trump, china,
-             humor,
+  keywords: [humor,
+             meme,
              funny,
-             Wuhan,
-             CDC,
-             WHO]
+             parody,
+             joke,
+             haha,
+             lol]
 
 base-url: https://raw.githubusercontent.com/echen102/COVID-19-TweetIDs/master
 
