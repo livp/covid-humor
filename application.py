@@ -58,16 +58,23 @@ class Application:
             with tqdm(total=len(tweet_ids), unit="tweet") as hydrate_progress_bar:
                 for tweet in t.hydrate(tweet_ids):
                     hydrate_progress_bar.update(1)
-                    if any(keyword in tweet["full_text"].lower() for keyword in self.configuration["sampling"]["keywords"]):
-                        tweets.append(tweet)
-                        written_progress_bar.update(1)
+                    if any(keyword
+                           in tweet["full_text"].lower()
+                           for keyword in self.configuration["sampling"]["keywords"]):
+                        append: bool = True
+                        if len(self.configuration["sampling"]["languages"]) > 0:
+                            if tweet["lang"] not in self.configuration["sampling"]["languages"]:
+                                append = False
+                        if append:
+                            tweets.append(tweet)
+                            written_progress_bar.update(1)
                         if len(tweets) == self.configuration["sampling"]["size"]:
                             break
         return tweets
 
     def export_to_csv(self, tweets):
         with open(self.output_filename, "w", encoding='utf-8') as f:
-            f.write("day,user,likes,retweets,text\n")
+            f.write("day,user,likes,retweets,lang,country code,text\n")
             for tweet in tweets:
                 if "retweeted_status" in tweet.keys() and "full_text" in tweet["retweeted_status"].keys():
                     full_text = self.remove_characters(tweet["retweeted_status"]["full_text"])
@@ -77,11 +84,20 @@ class Application:
                 user_name: str = self.remove_characters(tweet["user"]["screen_name"])
                 likes: int = tweet["favorite_count"]
                 retweets: int = tweet["retweet_count"]
-                f.write('{}/{}/{},{},{},{},"{}"\n'.format(
+                country_code: str = ''
+                if tweet["place"] is not None:
+                    country_code = tweet["place"]["country_code"]
+                lang: str = ''
+                if tweet["lang"] is not None:
+                    lang = tweet["lang"]
+
+                f.write('{}/{}/{},{},{},{},{},{},"{}"\n'.format(
                     self.date.year, str(self.date.month).zfill(2), str(self.date.day).zfill(2),
                     user_name,
                     likes,
                     retweets,
+                    lang,
+                    country_code,
                     full_text))
 
     @staticmethod
