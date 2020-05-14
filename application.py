@@ -90,15 +90,25 @@ class Application:
                 lang: str = ''
                 if tweet["lang"] is not None:
                     lang = tweet["lang"]
+                media_urls = []
+                if "entities" in tweet.keys():
+                    entities = tweet["entities"]
+                    if "media" in entities.keys():
+                        for media_entry in entities["media"]:
+                            media_urls.append(media_entry["media_url_https"])
 
-                f.write('{}/{}/{},{},{},{},{},{},"{}"\n'.format(
+                line = '{}/{}/{},{},{},{},{},{},"{}"'.format(
                     self.date.year, str(self.date.month).zfill(2), str(self.date.day).zfill(2),
                     user_name,
                     likes,
                     retweets,
                     lang,
                     country_code,
-                    full_text))
+                    full_text)
+                if len(media_urls) > 0:
+                    line = line + "," + ",".join(media_urls)
+                line = line + "\n"
+                f.write(line)
 
     @staticmethod
     def remove_characters(string: str) -> str:
