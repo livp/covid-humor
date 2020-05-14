@@ -62,9 +62,16 @@ class Application:
                            in tweet["full_text"].lower()
                            for keyword in self.configuration["sampling"]["keywords"]):
                         append: bool = True
+
+                        if "only_media" in self.configuration["sampling"].keys():
+                            if self.configuration["sampling"]["only_media"]:
+                                if not self.contains_media(tweet):
+                                    append = False
+
                         if len(self.configuration["sampling"]["languages"]) > 0:
                             if tweet["lang"] not in self.configuration["sampling"]["languages"]:
                                 append = False
+
                         if append:
                             tweets.append(tweet)
                             written_progress_bar.update(1)
@@ -91,11 +98,9 @@ class Application:
                 if tweet["lang"] is not None:
                     lang = tweet["lang"]
                 media_urls = []
-                if "entities" in tweet.keys():
-                    entities = tweet["entities"]
-                    if "media" in entities.keys():
-                        for media_entry in entities["media"]:
-                            media_urls.append(media_entry["media_url_https"])
+                if self.contains_media(tweet):
+                    for media_entry in tweet["entities"]["media"]:
+                        media_urls.append(media_entry["media_url_https"])
 
                 line = '{}/{}/{},{},{},{},{},{},"{}"'.format(
                     self.date.year, str(self.date.month).zfill(2), str(self.date.day).zfill(2),
@@ -115,6 +120,14 @@ class Application:
         for character in CHARACTERS_TO_REMOVE:
             string = string.replace(character, '')
         return string
+
+    @staticmethod
+    def contains_media(tweet) -> bool:
+        if "entities" in tweet.keys():
+            entities = tweet["entities"]
+            if "media" in entities.keys():
+                return True
+        return False
 
     def setup_command_line_arguments(self):
         # Options

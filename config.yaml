@@ -1,6 +1,7 @@
 sampling:
   size: 10
   languages: [en]
+  only_media: True
   keywords: [humor,
              meme,
              funny,
