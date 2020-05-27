@@ -1,6 +1,6 @@
 sampling:
   size: 100
-  languages: [en]
+  languages: []
   only_media: True
   keywords: ["#covidhumor",
              "#coronahumor",
