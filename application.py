@@ -9,8 +9,7 @@ from tqdm import tqdm
 from twarc import Twarc
 
 from configuration import Configuration
-from tweet_id_reader import TweetIdReader
-
+from tweet_id_reader import TweetIdReader, Echen102TweetIdReader, TSVTweetReader
 
 CHARACTERS_TO_REMOVE = ['\n', '"']
 
@@ -31,12 +30,21 @@ class Application:
     def run(self):
         """Application entry point."""
         self.setup_command_line_arguments()
-        reader = TweetIdReader(self.configuration["base-url"])
-        twitter_ids: List[str] = reader.read_date(self.date)
+
+        if self.input_file is not None:
+            reader = TSVTweetReader()
+            twitter_ids: List[str] = reader.read_file(file_name=self.input_file)
+        elif self.date is not None:
+            reader = Echen102TweetIdReader(base_url=self.configuration["base-url"])
+            twitter_ids: List[str] = reader.read_date(self.date)
+        else:
+            raise Exception("Either --input_file or --date must be specified")
+
         if len(twitter_ids) == 0:
             print("No tweets were found.")
             return
 
+        print("Shuffling tweets.")
         random.shuffle(twitter_ids)
         tweets = self.dehydrate(twitter_ids)
         if len(tweets) == 0:
@@ -129,15 +137,21 @@ class Application:
                 return True
         return False
 
+    @staticmethod
+    def is_retweet(tweet) -> bool:
+        return "retweeted_status" in tweet
+
     def setup_command_line_arguments(self):
         # Options
-        self.parser.add_argument("--date", help="Extraction Date", default=None, type=datetime.fromisoformat, required=True)
+        self.parser.add_argument("--input-file", help="Extraction File", default=None, type=str, required=False)
+        self.parser.add_argument("--date", help="Extraction Date", default=None, type=datetime.fromisoformat, required=False)
         self.parser.add_argument("--output", help="Output file name", default=None, type=str, required=True)
         self.parser.add_argument("--config-file", help="Configuration file", default="config.yaml", type=str, required=False)
 
         # Parsing
         args = self.parser.parse_args()
         self.date = args.date
+        self.input_file = args.input_file
         self.output_filename = args.output
 
         # Load configuration files

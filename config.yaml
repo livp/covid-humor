@@ -1,14 +1,28 @@
 sampling:
-  size: 10
+  size: 100
   languages: [en]
   only_media: True
-  keywords: [humor,
-             meme,
-             funny,
-             parody,
-             joke,
-             haha,
-             lol]
+  keywords: ["#covidhumor",
+             "#coronahumor",
+             "#coronavirushumor",
+             "#coronamemes",
+             "#covidmemes",
+             "#quarantinememes",
+             "#quarantinefunny",
+             "#coronavirusfunny",
+             "#coronavirusparody",
+             "#quarantinehumor",
+             "#quarantinejokes",
+             "#covidjokes",
+             "#coronajokes",
+             "#coronavirusjokes",
+             "#covidcomedy",
+             "#stayinsideandlaugh",
+             "#quarantinefun",
+             "#covidiots",
+             "#COVIDmemes",
+             "#coronavirusmemes",
+             "#COVID19memes",]
 
 base-url: https://raw.githubusercontent.com/echen102/COVID-19-TweetIDs/master
 
