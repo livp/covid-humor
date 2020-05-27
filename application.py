@@ -1,8 +1,9 @@
 """Console application."""
+import os
 import random
 
 from argparse import ArgumentParser
-from datetime import date, datetime
+from datetime import datetime
 from typing import List
 
 from tqdm import tqdm
@@ -32,8 +33,12 @@ class Application:
         self.setup_command_line_arguments()
 
         if self.input_file is not None:
+            date_time_str = os.path.split(self.input_file)[1][4:14]
+            self.date = datetime.strptime(date_time_str, "%Y-%m-%d")
+
             reader = TSVTweetReader()
             twitter_ids: List[str] = reader.read_file(file_name=self.input_file)
+            # Extract the date from the file name
         elif self.date is not None:
             reader = Echen102TweetIdReader(base_url=self.configuration["base-url"])
             twitter_ids: List[str] = reader.read_date(self.date)
