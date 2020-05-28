@@ -51,13 +51,19 @@ class Application:
 
         print("Shuffling tweets.")
         random.shuffle(twitter_ids)
-        tweets = self.dehydrate(twitter_ids)
-        if len(tweets) == 0:
+
+        with open(self.output_filename, "w", encoding='utf-8') as f:
+            count: int = 0
+            f.write("day,user,likes,retweets,lang,country code,text\n")
+            for tweet in self.dehydrate(twitter_ids):
+                f.write(self.tweet_to_csv(tweet))
+                count += 1
+
+        if not count:
             print("No tweets matching the provided hashtags were found.")
             return
 
-        self.export_to_csv(tweets)
-        print("{} tweets exported to {}".format(len(tweets), self.output_filename))
+        print("{} tweets exported to {}".format(count, self.output_filename))
 
     def dehydrate(self, tweet_ids: List[str]):
         t = Twarc(self.configuration["twitter"]["consumer_key"],
@@ -65,7 +71,7 @@ class Application:
                   self.configuration["twitter"]["access_token"],
                   self.configuration["twitter"]["access_token_secret"],
                   tweet_mode="extended")
-        tweets = []
+        count: int = 0
         print("Reading tweets from Twitter")
         with tqdm(total=self.configuration["sampling"]["size"], unit="tweet") as written_progress_bar:
             with tqdm(total=len(tweet_ids), unit="tweet") as hydrate_progress_bar:
@@ -84,49 +90,45 @@ class Application:
                         if len(self.configuration["sampling"]["languages"]) > 0:
                             if tweet["lang"] not in self.configuration["sampling"]["languages"]:
                                 append = False
-
                         if append:
-                            tweets.append(tweet)
                             written_progress_bar.update(1)
-                        if len(tweets) == self.configuration["sampling"]["size"]:
-                            break
-        return tweets
+                            count += 1
+                            yield tweet
+                        if count == self.configuration["sampling"]["size"]:
+                            return
 
-    def export_to_csv(self, tweets):
-        with open(self.output_filename, "w", encoding='utf-8') as f:
-            f.write("day,user,likes,retweets,lang,country code,text\n")
-            for tweet in tweets:
-                if "retweeted_status" in tweet.keys() and "full_text" in tweet["retweeted_status"].keys():
-                    full_text = self.remove_characters(tweet["retweeted_status"]["full_text"])
-                else:
-                    full_text: str = self.remove_characters(tweet["full_text"])
+    def tweet_to_csv(self, tweet):
+        if "retweeted_status" in tweet.keys() and "full_text" in tweet["retweeted_status"].keys():
+            full_text = self.remove_characters(tweet["retweeted_status"]["full_text"])
+        else:
+            full_text: str = self.remove_characters(tweet["full_text"])
 
-                user_name: str = self.remove_characters(tweet["user"]["screen_name"])
-                likes: int = tweet["favorite_count"]
-                retweets: int = tweet["retweet_count"]
-                country_code: str = ''
-                if tweet["place"] is not None:
-                    country_code = tweet["place"]["country_code"]
-                lang: str = ''
-                if tweet["lang"] is not None:
-                    lang = tweet["lang"]
-                media_urls = []
-                if self.contains_media(tweet):
-                    for media_entry in tweet["entities"]["media"]:
-                        media_urls.append(media_entry["media_url_https"])
+        user_name: str = self.remove_characters(tweet["user"]["screen_name"])
+        likes: int = tweet["favorite_count"]
+        retweets: int = tweet["retweet_count"]
+        country_code: str = ''
+        if tweet["place"] is not None:
+            country_code = tweet["place"]["country_code"]
+        lang: str = ''
+        if tweet["lang"] is not None:
+            lang = tweet["lang"]
+        media_urls = []
+        if self.contains_media(tweet):
+            for media_entry in tweet["entities"]["media"]:
+                media_urls.append(media_entry["media_url_https"])
 
-                line = '{}/{}/{},{},{},{},{},{},"{}"'.format(
-                    self.date.year, str(self.date.month).zfill(2), str(self.date.day).zfill(2),
-                    user_name,
-                    likes,
-                    retweets,
-                    lang,
-                    country_code,
-                    full_text)
-                if len(media_urls) > 0:
-                    line = line + "," + ",".join(media_urls)
-                line = line + "\n"
-                f.write(line)
+        line = '{}/{}/{},{},{},{},{},{},"{}"'.format(
+            self.date.year, str(self.date.month).zfill(2), str(self.date.day).zfill(2),
+            user_name,
+            likes,
+            retweets,
+            lang,
+            country_code,
+            full_text)
+        if len(media_urls) > 0:
+            line = line + "," + ",".join(media_urls)
+        line = line + "\n"
+        return line
 
     @staticmethod
     def remove_characters(string: str) -> str:
