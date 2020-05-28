@@ -1,4 +1,5 @@
 """Console application."""
+import ctypes
 import os
 import random
 
@@ -12,6 +13,8 @@ from twarc import Twarc
 from configuration import Configuration
 from tweet_id_reader import TweetIdReader, Echen102TweetIdReader, TSVTweetReader
 
+ES_CONTINUOUS = 0x80000000
+ES_SYSTEM_REQUIRED = 0x00000001
 CHARACTERS_TO_REMOVE = ['\n', '"']
 
 
@@ -165,8 +168,13 @@ class Application:
         self.configuration.load_configuration_file(args.config_file)
 
 
+def disable_windows_sleep():
+    if os.name == 'nt':
+        print("Preventing Windows from going to sleep")
+        ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)
+
+
 if __name__ == "__main__":
-    import sys
-    print(sys.path)
+    disable_windows_sleep()
     application = Application(ArgumentParser())
     application.run()
