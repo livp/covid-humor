@@ -57,7 +57,7 @@ class Application:
 
         with open(self.output_filename, "w", encoding='utf-8') as f:
             count: int = 0
-            f.write("day,user,likes,retweets,lang,country code,text\n")
+            f.write("day,user,likes,retweets,lang,country code,url,text\n")
             for tweet in self.dehydrate(twitter_ids):
                 f.write(self.tweet_to_csv(tweet))
                 count += 1
@@ -101,6 +101,7 @@ class Application:
                             return
 
     def tweet_to_csv(self, tweet):
+        id: str = tweet["id_str"]
         if "retweeted_status" in tweet.keys() and "full_text" in tweet["retweeted_status"].keys():
             full_text = self.remove_characters(tweet["retweeted_status"]["full_text"])
         else:
@@ -120,13 +121,14 @@ class Application:
             for media_entry in tweet["entities"]["media"]:
                 media_urls.append(media_entry["media_url_https"])
 
-        line = '{}/{}/{},{},{},{},{},{},"{}"'.format(
+        line = '{}/{}/{},{},{},{},{},{},https://twitter.com/i/web/status/{},"{}"'.format(
             self.date.year, str(self.date.month).zfill(2), str(self.date.day).zfill(2),
             user_name,
             likes,
             retweets,
             lang,
             country_code,
+            id,
             full_text)
         if len(media_urls) > 0:
             line = line + "," + ",".join(media_urls)
